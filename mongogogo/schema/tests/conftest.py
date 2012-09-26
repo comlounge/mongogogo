@@ -6,7 +6,7 @@ class SomeType(Schema):
     url = String()
     description = String()
 
-class BioType(Schema):
+class Bio(Schema):
     name = String()
     url = String()
 
@@ -19,15 +19,17 @@ class TestSchema1(Schema):
 class TestSchema2(Schema):
     """very simply schema with a sub schema"""
     name = String()
-    bio1 = BioType(on_serialize=[Default({'name': 'foobar'})])
-    bio2 = BioType(required = True)
+    bio1 = Bio(on_serialize=[Default({'name': 'foobar'})])
+    bio2 = Bio(required = True)
 
 class TestSchema12(Schema):
     name = String()
-    permissions = ListType(String(), on_serialize = [Default([])])
-    links = ListType(SomeType())
-    bio = BioType(on_serialize=[Default({'name': 'foobar'})])
+    permissions = List(String(), on_serialize = [Default([])])
+    links = List(SomeType())
+    bio = Bio(on_serialize=[Default({'name': 'foobar'})])
 
+class SubSchema(TestSchema1):
+    name2 = String()
 
 def pytest_funcarg__schema1(request):
     return TestSchema1()
@@ -35,6 +37,8 @@ def pytest_funcarg__schema1(request):
 def pytest_funcarg__schema2(request):
     return TestSchema2()
 
+def pytest_funcarg__subschema1(request):
+    return SubSchema()
 
 
 

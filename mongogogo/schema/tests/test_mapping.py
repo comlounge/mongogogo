@@ -75,3 +75,16 @@ def test_basic_serialize_submapping_missing_bio1(schema2):
     assert res['bio1']['url'] == null
     assert res['bio2']['url'] == "http://example.com"
             
+
+def test_basic_serialize_with_subclass(subschema1):
+    
+    data = {'not_required' : 'n/a',
+         'name2' : 'hansi', # new field in this subschema
+         'required' : 'Required',
+         'with_default' : 'no default'}
+    res = subschema1.serialize(data)
+    print res
+    assert res['not_required'] == "n/a"
+    assert res['required'] == "Required"
+    assert res['with_default'] == "no default"
+    assert res['name2'] == "hansi"

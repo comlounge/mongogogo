@@ -20,3 +20,7 @@ class Invalid(Exception):
         self.node = node
         self.msg = msg
 
+    def __str__(self):
+        """return something printable"""
+        return "<%s: %s in %s>" %(self.__class__.__name__, self.msg, self.node)
+

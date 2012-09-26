@@ -54,7 +54,13 @@ class SchemaNode(object):
         serialization on all sub nodes is called as well with it's respective value (or null in case
         it does not exist in the source data.
 
-        It will return the serialized data of the complete source value.
+        The sequence is as follows:
+        - first all filters in ``on_serialize`` are applied to the data. 
+            Each filter is called with the ``value``, ``data`` and any passed additional keywords.
+        - then the default check is done. If no value is available and ``default`` is set then this is used
+        - lastly the required check is done.
+
+        .. note:: Is this sequence right?
 
         :param value: The individual value for this node to serialize
         :param data: The whole record e.g. in case you need access to a different field for e.g. a 
@@ -66,7 +72,8 @@ class SchemaNode(object):
         """
 
         # this is for bootstrapping the master schema / mapping
-        if data is null: data = value
+        if data is null: 
+            data = value
 
         for filter in self.on_serialize:
             value = filter(value, data, **kw)
@@ -158,7 +165,6 @@ class String(SchemaNode):
         super(String, self).__init__(*args, **kw)
         self.encoding = encoding
 
-
     def do_serialize(self, value, data, **kw):
         """serialize data"""
         if value is null:
@@ -183,12 +189,12 @@ class String(SchemaNode):
             raise Invalid(self, "Value '%s' cannot be serialized: %s" %(value, e))
 
 
-class ListType(SchemaNode):
+class List(SchemaNode):
     """a node which consists of a list of sub nodes"""
 
     def __init__(self, subtype, *args, **kw):
         """initialize the list with a list of subtypes which are allowed to be in the document"""
-        super(ListType, self).__init__(*args, **kw)
+        super(List, self).__init__(*args, **kw)
         self.subtype = subtype
 
     def do_serialize(self, value, data, **kw):
@@ -216,8 +222,8 @@ class BioType(Schema):
 
 class Test3(Schema):
     name = String()
-    permissions = ListType(String(), on_serialize = [Default([])])
-    links = ListType(SomeType())
+    permissions = List(String(), on_serialize = [Default([])])
+    links = List(SomeType())
     bio = BioType(on_serialize=[Default({'name': 'foobar'})])
 
 t3 = Test3()
