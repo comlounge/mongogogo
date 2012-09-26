@@ -1,5 +1,5 @@
-from helpers import AttributeMapper
 import uuid
+import types
 
 class DatabaseError(Exception):
     """master class for all mongogogo exceptions"""
@@ -34,7 +34,7 @@ class ObjectNotFound(DatabaseError):
 class Record(dict):
     
     _schema = None
-    _protected = ['collection', '_protected', '_from_db']
+    _protected = ['_collection', '_protected', '_from_db']
 
     def __init__(self, default={}, _from_db = False, _collection = None, _md = None, *args, **kwargs):
         """initialize a record with data
@@ -45,13 +45,15 @@ class Record(dict):
         :param _md: additional metadata which is not saved but can be accessed as obj._id
         """
         super(Record, self).__init__(*args, **kwargs)
+        self.update(self.schema.serialize({}))
         self.update(default)
         self.update(kwargs)
         self._collection = _collection
         self._id = self.get("_id", None)
 
         if not _from_db:
-            self.initialize()
+            # lets initialize it
+            self.after_initialize()
 
     def __getattr__(self, k):
         """retrieve some data from the dict"""
@@ -68,24 +70,19 @@ class Record(dict):
         else:
             self[k] = v
 
-    def _clone(self):
-        """return a clone of this object"""
-        d = copy.deepcopy(self)
-        return AttributeMapper(d)
-
     def update(self, d):
         """update the dictionary but make sure that existing included AttributeMappers are only updated aswell"""
         for a,v in d.items():
             if a not in self:
                 self[a] = v
-            elif isinstance(self[a], AttributeMapper) and type(v) == types.DictType:
+            elif isinstance(self[a], Record) and type(v) == types.DictType:
                 self[a].update(v)
             elif type(self[a]) == types.DictType and type(v) == types.DictType:
                 self[a].update(v)
             else:
                 self[a] = v
     
-    def initialize(self):
+    def after_initialize(self):
         """initialize this object. This method is called when it's a new object meaning
         that it has no unique id"""
         pass
@@ -112,7 +109,7 @@ class Collection(object):
         :param md: Additional Metadata to be stored in this collection (link to some config etc. maybe useful for validation)
         """
         self.collection = collection
-        self.md = AttributeMapper(md)
+        self.md = md
 
     def new_id(self):
         """create a new unique id"""
@@ -129,10 +126,13 @@ class Collection(object):
         data = obj.schema.serialize(obj)
         data = self.before_put(obj, data) # hook for handling additional validation etc.
         self.collection.save(data, True)
+        obj._id = data['_id']
         obj._collection = self
         obj._from_db = True
         self.after_put(obj)
         return obj
+
+    save = put
 
     def before_put(self, obj, data):
         """hook for handling additional validation etc."""
@@ -143,13 +143,15 @@ class Collection(object):
         pass
 
 
-    def get(self, _idkwargs):
+    def get(self, _id):
         """return an object by it's id"""
         data = self.collection.find_one({'_id' : _id})
         if data is None:
             raise ObjectNotFound(_id)
-        
-        return self.data_class.deserialize(data, collection=self)
+        print data 
+        data = self.data_class.schema.deserialize(data)
+        print data
+        return self.data_class(data, _collection=self, _from_db = True)
 
     __getitem__ = get
         

@@ -153,7 +153,7 @@ class Schema(SchemaNode):
         output = {} # of course we have a mapping as output
         for name, field in self._nodes:
             # TODO: here exceptions!
-            sub_value = data.get(name, null)
+            sub_value = value.get(name, null)
             output[name] = field.deserialize(sub_value, data = data, **kw)
         return output
 
