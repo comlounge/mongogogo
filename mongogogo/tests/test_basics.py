@@ -52,4 +52,30 @@ def test_dictfield_dotted(db, persons):
     p2 = persons[p._id]
     assert p2.d.foo == "bar"
 
+def test_find(db, persons): 
+    # insert some records into the database
+    for i in range(1,10):
+        p = persons.data_class(firstname="Christian%s" %i, lastname="Scholz%s" %i)
+        persons.save(p)
+    res = persons.find({'firstname':"Christian1"})
+    assert res.count() == 1
+    assert isinstance(res[0], persons.data_class)
 
+def test_find_and_sort(db, persons): 
+    # insert some records into the database
+    for i in range(1,10):
+        p = persons.data_class(firstname="Christian%s" %i, lastname="Scholz%s" %i, age=17)
+        persons.save(p)
+    res = persons.find({'age':17}).sort("firstname", 1)
+    assert res[0].firstname == "Christian1"
+    res = persons.find({'age':17}).sort("firstname", -1)
+    assert res[0].firstname == "Christian9"
+
+
+def test_find_one(db, persons): 
+    # insert some records into the database
+    for i in range(1,10):
+        p = persons.data_class(firstname="Christian%s" %i, lastname="Scholz%s" %i)
+        persons.save(p)
+    person = persons.find_one({'firstname':"Christian1"})
+    assert person.firstname == "Christian1"

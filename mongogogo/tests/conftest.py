@@ -16,7 +16,7 @@ def pytest_funcarg__db(request):
     return request.cached_setup(
         setup = setup_db,
         teardown = teardown_db,
-        scope = "module")
+        scope = "function")
 
 class BioType(Schema):
     name = String()
@@ -29,7 +29,7 @@ class PersonSchema(Schema):
     age = Integer(default=24)
     d = Dict(default={}, dotted=True)
     e = Dict(default={}, dotted=False)
-    bio = BioType(on_serialize=[Default({'name': 'foobar'})])
+    #bio = BioType(on_serialize=[Default({'name': 'foobar'})])
 
 class Person(Record):
     schema = PersonSchema()

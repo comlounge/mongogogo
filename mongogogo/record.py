@@ -1,5 +1,6 @@
 import uuid
 import types
+from cursor import Cursor
 
 class DatabaseError(Exception):
     """master class for all mongogogo exceptions"""
@@ -159,8 +160,19 @@ class Collection(object):
             data = self.data_class.schema.deserialize(data)
         return self.data_class(data, _collection=self, _from_db = True)
 
+
+    def find(self, *args, **kwargs):
+        return Cursor(self.collection, wrap = self.data_class, *args, **kwargs)
+        
+    def find_one(self, spec_or_id=None, *args, **kwargs):
+
+        if spec_or_id is not None and not isinstance(spec_or_id, dict):
+            spec_or_id = {"_id": spec_or_id}
+
+        for result in self.find(spec_or_id, *args, **kwargs).limit(-1):
+            return result
+        return None
+
     __getitem__ = get
         
-
-    
 
