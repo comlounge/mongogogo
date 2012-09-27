@@ -28,7 +28,17 @@ class Person(Record):
 class Persons(Collection):
     data_class = Person
 
+class SchemalessPerson(Record):
+    schema = PersonSchema()
+    schemaless = True
+
+class SchemalessPersons(Collection):
+    data_class = SchemalessPerson
 
 def pytest_funcarg__persons(request):
     db = request.getfuncargvalue("db")
     return Persons(db.persons)
+
+def pytest_funcarg__schemaless_persons(request):
+    db = request.getfuncargvalue("db")
+    return SchemalessPersons(db.persons)

@@ -34,7 +34,8 @@ class ObjectNotFound(DatabaseError):
 class Record(dict):
     
     _schema = None
-    _protected = ['_collection', '_protected', '_from_db']
+    _protected = ['_collection', '_protected', '_from_db', '_schemaless']
+    schemaless = False # set to true to allow arbitrary data. If set to False, then additional data will be filtered out
 
     def __init__(self, default={}, _from_db = False, _collection = None, _md = None, *args, **kwargs):
         """initialize a record with data
@@ -123,7 +124,11 @@ class Collection(object):
             obj._id = self.new_id()
 
         # now serialize and validate the object
-        data = obj.schema.serialize(obj)
+        if obj.schemaless:
+            data = obj
+            data.update(obj.schema.serialize(obj))
+        else:
+            data = obj.schema.serialize(obj)
         data = self.before_put(obj, data) # hook for handling additional validation etc.
         self.collection.save(data, True)
         obj._id = data['_id']
@@ -148,9 +153,10 @@ class Collection(object):
         data = self.collection.find_one({'_id' : _id})
         if data is None:
             raise ObjectNotFound(_id)
-        print data 
-        data = self.data_class.schema.deserialize(data)
-        print data
+        if self.data_class.schemaless:
+            data.update(self.data_class.schema.deserialize(data))
+        else:
+            data = self.data_class.schema.deserialize(data)
         return self.data_class(data, _collection=self, _from_db = True)
 
     __getitem__ = get
