@@ -1,5 +1,6 @@
 import pymongo
-from mongogogo import Record, Collection, Schema, String
+import datetime
+from mongogogo import Record, Collection, Schema, String, DateTime, Integer, Dict, Default
 
 DB_NAME = "mongogogo_testing_78827628762"
 
@@ -17,10 +18,18 @@ def pytest_funcarg__db(request):
         teardown = teardown_db,
         scope = "module")
 
+class BioType(Schema):
+    name = String()
+    url = String()
 
 class PersonSchema(Schema):
     firstname = String()
     lastname = String(default="foobar", required=True)
+    creation = DateTime(required=True, default = datetime.datetime.utcnow)
+    age = Integer(default=24)
+    d = Dict(default={}, dotted=True)
+    e = Dict(default={}, dotted=False)
+    bio = BioType(on_serialize=[Default({'name': 'foobar'})])
 
 class Person(Record):
     schema = PersonSchema()

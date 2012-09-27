@@ -24,3 +24,40 @@ class Invalid(Exception):
         """return something printable"""
         return "<%s: %s in %s>" %(self.__class__.__name__, self.msg, self.node)
 
+
+class AttributeMapper(dict):
+    """a dictionary like object which also is accessible via getattr/setattr"""
+
+    __slots__ = []
+
+    def __init__(self, default={}, *args, **kwargs):
+        super(AttributeMapper, self).__init__(*args, **kwargs)
+        self.update(default)
+        self.update(kwargs)
+
+    def __getattr__(self, k):
+        """retrieve some data from the dict"""
+        if self.has_key(k):
+            return self[k]
+        raise AttributeError(k)
+
+    def __setattr__(self, k,v):
+        """store an attribute in the map"""
+        self[k] = v
+
+    def _clone(self):
+        """return a clone of this object"""
+        d = copy.deepcopy(self) 
+        return AttributeMapper(d)
+
+    def update(self, d):
+        """update the dictionary but make sure that existing included AttributeMappers are only updated aswell"""
+        for a,v in d.items():
+            if a not in self:
+                self[a] = v
+            elif isinstance(self[a], AttributeMapper) and type(v) == types.DictType:
+                self[a].update(v)
+            elif type(self[a]) == types.DictType and type(v) == types.DictType:
+                self[a].update(v)
+            else:
+                self[a] = v

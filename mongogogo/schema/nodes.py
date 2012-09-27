@@ -1,4 +1,4 @@
-from utils import null, Invalid, marker
+from utils import null, Invalid, marker, AttributeMapper
 
 ###
 ### nodes
@@ -80,7 +80,10 @@ class SchemaNode(object):
 
         # check default
         if value is null and self.default is not marker:
-            value = self.default
+            if callable(self.default):
+                value = self.default()
+            else:
+                value = self.default
 
         # check required
         if value is null and self.required:
@@ -186,6 +189,41 @@ class String(SchemaNode):
                     result = unicode(value)
             return result
         except Exception, e:
+            raise Invalid(self, "Value '%s' cannot be serialized: %s" %(value, e))
+
+
+class DateTime(SchemaNode):
+    """a datetime type. """
+
+class Dict(SchemaNode):
+    """a dict type. """
+
+    def __init__(self, dotted = False, *args, **kw):
+        """initialize the Dict Type.
+
+        :param dotted: if set to ``True`` then this dictionary will also allow dotted access using AttributeMapper
+        
+        """
+        super(Dict, self).__init__(*args, **kw)
+        self.dotted = dotted
+
+    def do_deserialize(self, value, data, **kw):
+        """deserialize either into a normal dictionary or into an AttributeMapper allowing dotted notation
+        """
+        if self.dotted:
+            return AttributeMapper(value)
+        else:
+            return dict(value)
+
+
+class Integer(SchemaNode):
+    """an integer type. """
+
+    def do_serialize(self, value, data, **kw):
+        """serialize data"""
+        try:
+            return int(value)
+        except Exception, e: 
             raise Invalid(self, "Value '%s' cannot be serialized: %s" %(value, e))
 
 
