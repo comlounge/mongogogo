@@ -1,6 +1,8 @@
 import pymongo
 import datetime
-from mongogogo import Record, Collection, Schema, String, DateTime, Integer, Dict, Default
+from mongogogo import Record, Collection
+from mongogogo import String, DateTime, Integer, Dict, Default
+from mongogogo import SchemaNode, Schema
 
 DB_NAME = "mongogogo_testing_78827628762"
 
@@ -18,6 +20,11 @@ def pytest_funcarg__db(request):
         teardown = teardown_db,
         scope = "function")
 
+class Incrementor(SchemaNode):  
+
+    def do_deserialize(self, value, data, **kw):
+        return int(value)+1
+
 class BioType(Schema):
     name = String()
     url = String()
@@ -27,6 +34,7 @@ class PersonSchema(Schema):
     lastname = String(default="foobar", required=True)
     creation = DateTime(required=True, default = datetime.datetime.utcnow)
     age = Integer(default=24)
+    incr = Incrementor(default=1)
     d = Dict(default={}, dotted=True)
     e = Dict(default={}, dotted=False)
     #bio = BioType(on_serialize=[Default({'name': 'foobar'})])

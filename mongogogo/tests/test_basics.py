@@ -91,13 +91,27 @@ def test_with_id_and_find(db, persons):
     p2 = persons.find_one({'_id' : u'cs'})
     assert p2._id == u"cs"
 
-def test_deserialize_on_find(db, persons): 
+def test_deserialize_on_get(db, persons): 
+    """check if the schema is properly deserialized on find(). We use a schema for it
+    which increments the ``inc`` field by one on each retrieve."""
+    p = persons.data_class(firstname="Foo", lastname="Bar", _id=u"cs")
+    persons.save(p)
+    p2 = persons.get(u'cs')
+    assert p2.incr == 2
+    persons.save(p2)
+    p2 = persons.get(u'cs')
+    assert p2.incr == 3
+
+def test_deserialize_on_find_one(db, persons): 
     """check if the schema is properly deserialized on find(). We use a schema for it
     which increments the ``inc`` field by one on each retrieve."""
     p = persons.data_class(firstname="Foo", lastname="Bar", _id=u"cs")
     persons.save(p)
     p2 = persons.find_one({'_id' : u'cs'})
-    assert p2._id == u"cs"
+    assert p2.incr == 2
+    persons.save(p2)
+    p2 = persons.find_one({'_id' : u'cs'})
+    assert p2.incr == 3
 
 
 

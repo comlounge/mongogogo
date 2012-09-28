@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# Copyright (c) 2009-2011, Nicolas Clairon
+# Copyright (c) 2009-2012, Nicolas Clairon, Christian Scholz
 # All rights reserved.
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
@@ -24,16 +24,19 @@
 # ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+# 
+# This was copied from mongokit as it looked useful. It was changed slightly though to adapt it
 
 from pymongo.cursor import Cursor as PymongoCursor
 from collections import deque
 
 class Cursor(PymongoCursor):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, collection, *args, **kwargs):
         self.__wrap = None
+        self.__mongogogo_collection = collection
         if kwargs:
             self.__wrap = kwargs.pop('wrap', None)
-        super(Cursor, self).__init__(*args, **kwargs)
+        super(Cursor, self).__init__(collection.collection, *args, **kwargs)
 
     def next(self):
         if self._Cursor__empty:
@@ -49,7 +52,7 @@ class Cursor(PymongoCursor):
             else:
                 son = item
             if self.__wrap is not None:
-                return self.__wrap(son, collection=self._Cursor__collection)
+                return self.__wrap(son, _from_db = True, _collection=self.__mongogogo_collection)
             else:
                 return son
         else:

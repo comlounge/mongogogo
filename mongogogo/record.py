@@ -1,5 +1,6 @@
 import uuid
 import types
+import copy
 from cursor import Cursor
 
 class DatabaseError(Exception):
@@ -38,20 +39,34 @@ class Record(dict):
     _protected = ['_collection', '_protected', '_from_db', '_schemaless']
     schemaless = False # set to true to allow arbitrary data. If set to False, then additional data will be filtered out
 
-    def __init__(self, default={}, _from_db = False, _collection = None, _md = None, *args, **kwargs):
+    def __init__(self, doc={}, _from_db = False, _collection = None, _md = None, *args, **kwargs):
         """initialize a record with data
 
-        :param data: the data to initialize this record with
+        :param doc: The initial document. Note that this will be deserialized in case _from_db is True
         :param _from_db: flag to declare whether the record is new or loaded from the database
         :param _collection: the collection instance this data object belongs to
         :param _md: additional metadata which is not saved but can be accessed as obj._id
         """
-        super(Record, self).__init__(*args, **kwargs)
-        self.update(self.schema.serialize({}))
-        self.update(default)
-        self.update(kwargs)
+
+        # schemaless means that we also store values from the doc which are not present in the schema
+        # otherwise we will just ignore them. Defaults and kwargs are not bound to it though.
+        self.update(self.schema.serialize({})) # set defaults
+        doc = copy.copy(doc) # copy so that we don't change it in place
+        doc.update(kwargs)
+        if self.schemaless:
+            super(Record, self).__init__(doc, *args, **kwargs)
+        else:
+            super(Record, self).__init__(*args, **kwargs)
+        self._id = None
+
+        # only deserialize it if it's coming from the database
+        if _from_db:
+            self.update(self.schema.deserialize(doc))
+        else:
+            self.update(doc)
+
+        self._id = doc.get("_id", None)
         self._collection = _collection
-        self._id = self.get("_id", None)
 
         if not _from_db:
             # lets initialize it
@@ -158,16 +173,16 @@ class Collection(object):
         data = self.collection.find_one({'_id' : _id})
         if data is None:
             raise ObjectNotFound(_id)
-        if self.data_class.schemaless:
-            data.update(self.data_class.schema.deserialize(data))
-        else:
-            data = self.data_class.schema.deserialize(data)
+        #if self.data_class.schemaless:
+            #data.update(self.data_class.schema.deserialize(data))
+        #else:
+            #data = self.data_class.schema.deserialize(data)
         data['_id'] = _id
         return self.data_class(data, _collection=self, _from_db = True)
 
 
     def find(self, *args, **kwargs):
-        return Cursor(self.collection, wrap = self.data_class, *args, **kwargs)
+        return Cursor(self, wrap = self.data_class, *args, **kwargs)
         
     def find_one(self, spec_or_id=None, *args, **kwargs):
 
