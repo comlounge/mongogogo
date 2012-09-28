@@ -121,8 +121,11 @@ class Collection(object):
         """store an object"""
 
         # check if we need to create an id
-        if "_id" in obj and obj._id is not None and self.create_ids:
-            obj._id = self.new_id()
+        _id = None
+        if "_id" not in obj and self.create_ids:
+            _id = self.new_id()
+        else:
+            _id = obj._id
 
         # now serialize and validate the object
         if obj.schemaless:
@@ -130,6 +133,8 @@ class Collection(object):
             data.update(obj.schema.serialize(obj))
         else:
             data = obj.schema.serialize(obj)
+        if _id is not None:
+            data['_id'] = _id
         data = self.before_put(obj, data) # hook for handling additional validation etc.
         self.collection.save(data, True)
         obj._id = data['_id']
@@ -148,7 +153,6 @@ class Collection(object):
         """hook for changing data after the object from the database has been instantiated"""
         pass
 
-
     def get(self, _id):
         """return an object by it's id"""
         data = self.collection.find_one({'_id' : _id})
@@ -158,6 +162,7 @@ class Collection(object):
             data.update(self.data_class.schema.deserialize(data))
         else:
             data = self.data_class.schema.deserialize(data)
+        data['_id'] = _id
         return self.data_class(data, _collection=self, _from_db = True)
 
 
