@@ -180,6 +180,8 @@ class Collection(object):
         data['_id'] = _id
         return self.data_class(data, _collection=self, _from_db = True)
 
+    def remove(self, *args, **kwargs):
+        return self.collection.remove(*args, **kwargs)
 
     def find(self, *args, **kwargs):
         return Cursor(self, wrap = self.data_class, *args, **kwargs)
