@@ -83,7 +83,6 @@ def test_basic_serialize_with_subclass(subschema1):
          'required' : 'Required',
          'with_default' : 'no default'}
     res = subschema1.serialize(data)
-    print res
     assert res['not_required'] == "n/a"
     assert res['required'] == "Required"
     assert res['with_default'] == "no default"
