@@ -41,10 +41,11 @@ class SchemaNode(object):
 
                 # filter out only the type elements. We have marker in the base class for that
                 if hasattr(field, '_schemanode'):
+                    field.name = name
                     instance._nodes.append((name, field))
         return instance
 
-    def __init__(self, on_serialize = [], on_deserialize = [], default = marker, required = False): 
+    def __init__(self, on_serialize = [], on_deserialize = [], default = marker, required = False, name = None): 
         """initialize the ``SchemaNode`` with generic parameters like queues, default and required flag
 
         :param on_serialize: a list of filters to be run before the actual serialization
@@ -55,14 +56,16 @@ class SchemaNode(object):
             as default is set before required is tested
         :param required: Define whether the field is required in both serialization and deserialization. The
             same like for default applies regarding separate queues. 
+        :param name: the name of the field. In case it is included in a schema this will be set automatically
         """
         self.on_serialize = on_serialize
         self.on_deserialize = on_deserialize
         self.default = default
         self.required = required
+        self.name = name
 
 
-    def serialize(self, value = null, data = null, **kw):
+    def serialize(self, value = null, data = null, validate = True, **kw):
         """serialize data to a data structure for MongoDB. If this is a combined node then 
         serialization on all sub nodes is called as well with it's respective value (or null in case
         it does not exist in the source data.
@@ -80,6 +83,8 @@ class SchemaNode(object):
             password test in a filter. Note that the this record is always the source record and not
             the serialized version as this can not be complete.  
         :param kw: Additional keywords which will be passed to the actual serialization code and filters
+        :param validate: If False then no validation code will be run which is useful for initializing an object
+            with just the default values
         :return: The serialized version of the data.
         
         """
@@ -99,11 +104,11 @@ class SchemaNode(object):
                 value = self.default
 
         # check required
-        if value is null and self.required:
+        if value is null and self.required and validate:
             raise Invalid(self, "required data missing")
 
         # now run the actual serialization
-        return self.do_serialize(value, data, **kw)
+        return self.do_serialize(value, data, validate = validate,**kw)
 
     def deserialize(self, value = null, data = null, **kw):
         """deserialize MongoDB data to a python usable data structure. If this is a combined node then 
@@ -181,10 +186,10 @@ class String(SchemaNode):
         super(String, self).__init__(*args, **kw)
         self.encoding = encoding
 
-    def do_serialize(self, value, data, **kw):
+    def do_serialize(self, value, data, validate = True, **kw):
         """serialize data"""
         if value is null:
-            if self.required:
+            if self.required and validate:
                 raise Invalid(self, "required data missing")
             else:
                 return null
@@ -285,8 +290,12 @@ class List(SchemaNode):
         super(List, self).__init__(*args, **kw)
         self.subtype = subtype
 
-    def do_serialize(self, value, data, **kw):
+    def do_serialize(self, value, data, validate = True, **kw):
         """serialize the list"""
+        if value is null and not self.required:
+            value = []
+        elif value is null and self.required and validate:
+            raise Invalid(self, "required data missing")
         result = []
         for item in value:
             result.append(self.subtype.serialize(item, data, **kw))

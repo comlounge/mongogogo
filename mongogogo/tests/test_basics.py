@@ -113,5 +113,11 @@ def test_deserialize_on_find_one(db, persons):
     p2 = persons.find_one({'_id' : u'cs'})
     assert p2.incr == 3
 
-
+def test_initialize_with_doc(db, persons):
+    # this initially gave an error because we serialized first
+    # before storing the doc
+    p = persons.data_class(firstname="Foo")
+    persons.save(p)
+    p2 = persons[p._id]
+    assert p2.firstname == "Foo"
 

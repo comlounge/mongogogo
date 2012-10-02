@@ -30,7 +30,7 @@ class BioType(Schema):
     url = String()
 
 class PersonSchema(Schema):
-    firstname = String()
+    firstname = String(required=True)
     lastname = String(default="foobar", required=True)
     creation = DateTime(required=True, default = datetime.datetime.utcnow)
     age = Integer(default=24)

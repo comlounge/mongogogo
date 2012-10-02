@@ -45,12 +45,12 @@ class Record(dict):
         :param doc: The initial document. Note that this will be deserialized in case _from_db is True
         :param _from_db: flag to declare whether the record is new or loaded from the database
         :param _collection: the collection instance this data object belongs to
-        :param _md: additional metadata which is not saved but can be accessed as obj._id
+        :param _md: additional metadata which is not saved but can be accessed as obj._md
         """
 
         # schemaless means that we also store values from the doc which are not present in the schema
         # otherwise we will just ignore them. Defaults and kwargs are not bound to it though.
-        self.update(self.schema.serialize({})) # set defaults
+        self.update(self.schema.serialize({}, validate=False)) # set defaults
         doc = copy.copy(doc) # copy so that we don't change it in place
         doc.update(kwargs)
         if self.schemaless:
