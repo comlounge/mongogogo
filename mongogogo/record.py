@@ -39,36 +39,40 @@ class Record(dict):
     _protected = ['_collection', '_protected', '_from_db', '_schemaless']
     schemaless = False # set to true to allow arbitrary data. If set to False, then additional data will be filtered out
 
-    def __init__(self, doc={}, _from_db = False, _collection = None, _md = None, *args, **kwargs):
+    def __init__(self, doc={}, from_db = None, collection = None, *args, **kwargs):
         """initialize a record with data
 
-        :param doc: The initial document. Note that this will be deserialized in case _from_db is True
-        :param _from_db: flag to declare whether the record is new or loaded from the database
-        :param _collection: the collection instance this data object belongs to
-        :param _md: additional metadata which is not saved but can be accessed as obj._md
+        :param doc: The initial document coming from python. This will be merged with keyword
+            arguments but won't get serialized or deserialized with the schema as it's already python.
+            If ``doc`` and ``from_db`` are both given then only from_db will be used. 
+        :param from_db: a record coming from the database. This will be deserialized. If it's None then
+            we assume that it's a new object. Note that default values from the schema will not be set.
+            This will only happen on the serialization step on save.
+        :param collection: the collection instance this data object belongs to
         """
 
         # schemaless means that we also store values from the doc which are not present in the schema
         # otherwise we will just ignore them. Defaults and kwargs are not bound to it though.
-        self.update(self.schema.serialize({}, validate=False)) # set defaults
         doc = copy.copy(doc) # copy so that we don't change it in place
         doc.update(kwargs)
+
+        self._id = None
         if self.schemaless:
-            super(Record, self).__init__(doc, *args, **kwargs)
+            super(Record, self).__init__(from_db if from_db is not None else doc, *args, **kwargs)
         else:
             super(Record, self).__init__(*args, **kwargs)
-        self._id = None
 
         # only deserialize it if it's coming from the database
-        if _from_db:
-            self.update(self.schema.deserialize(doc))
+        if from_db is not None:
+            self.update(self.schema.deserialize(from_db))
+            self._id = from_db.get("_id", None)
         else:
+            self.update(self.schema.serialize({}, validate=False)) # set defaults
             self.update(doc)
 
-        self._id = doc.get("_id", None)
-        self._collection = _collection
+        self._collection = collection
 
-        if not _from_db:
+        if from_db is None:
             # lets initialize it
             self.after_initialize()
 
@@ -154,7 +158,6 @@ class Collection(object):
         self.collection.save(data, True)
         obj._id = data['_id']
         obj._collection = self
-        obj._from_db = True
         self.after_put(obj)
         return obj
 
@@ -178,7 +181,7 @@ class Collection(object):
         #else:
             #data = self.data_class.schema.deserialize(data)
         data['_id'] = _id
-        return self.data_class(data, _collection=self, _from_db = True)
+        return self.data_class(from_db = data, _collection=self)
 
     def remove(self, *args, **kwargs):
         return self.collection.remove(*args, **kwargs)

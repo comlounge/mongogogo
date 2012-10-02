@@ -52,7 +52,7 @@ class Cursor(PymongoCursor):
             else:
                 son = item
             if self.__wrap is not None:
-                return self.__wrap(son, _from_db = True, _collection=self.__mongogogo_collection)
+                return self.__wrap(from_db = son, collection=self.__mongogogo_collection)
             else:
                 return son
         else:
@@ -61,5 +61,5 @@ class Cursor(PymongoCursor):
     def __getitem__(self, index):
         obj = super(Cursor, self).__getitem__(index)
         if (self.__wrap is not None) and isinstance(obj, dict):
-            return self.__wrap(obj)
+            return self.__wrap(from_db = obj)
         return obj
