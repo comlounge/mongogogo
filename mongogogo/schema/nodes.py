@@ -1,4 +1,17 @@
 from utils import null, Invalid, marker, AttributeMapper
+import datetime
+
+__all__ = [
+    "SchemaNode",
+    "Schema",
+    "String",
+    "Integer",
+    "Float",
+    "Date",
+    "DateTime",
+    "Dict",
+    "List",
+]
 
 ###
 ### nodes
@@ -195,6 +208,17 @@ class String(SchemaNode):
 class DateTime(SchemaNode):
     """a datetime type. """
 
+class Date(SchemaNode):
+    """a date type which converts DateTime objects to Date objects"""
+
+    def do_serialize(self, value, data, **kw):
+        if isinstance(value, datetime.datetime):
+            return value.date()
+        elif not isinstance(value, datetime.date):
+            raise Invalid(self, "Value '%s' is not an instance of datetime.datetime.Date" %(value))
+        return value
+
+
 class Dict(SchemaNode):
     """a dict type. """
 
@@ -219,13 +243,39 @@ class Dict(SchemaNode):
 class Integer(SchemaNode):
     """an integer type. """
 
+    def __init__(self, min = None, max = None, *args, **kw):
+        """initialize the String Type"""
+        super(Integer, self).__init__(*args, **kw)
+        self.min = min
+        self.max = max
+
     def do_serialize(self, value, data, **kw):
         """serialize data"""
         try:
-            return int(value)
+            v = int(value)
+        except Exception, e: 
+            raise Invalid(self, "Value '%s' cannot be serialized: %s" %(value, e))
+        if self.min is not None and v < self.min:
+            raise Invalid(self, "Value '%s' is too low, minimum value is %s" %(value, self.min))
+        if self.max is not None and v > self.max:
+            raise Invalid(self, "Value '%s' is too big, maximum value is %s" %(value, self.max))
+        return v
+
+class Float(Integer):
+    """a float type. """
+
+    def do_serialize(self, value, data, **kw):
+        """serialize data"""
+        try:
+            v = float(value)
         except Exception, e: 
             raise Invalid(self, "Value '%s' cannot be serialized: %s" %(value, e))
 
+        if self.min is not None and v < self.min:
+            raise Invalid(self, "Value '%s' is too low, minimum value is %s" %(value, self.min))
+        if self.max is not None and v > self.max:
+            raise Invalid(self, "Value '%s' is too big, maximum value is %s" %(value, self.max))
+        return v
 
 class List(SchemaNode):
     """a node which consists of a list of sub nodes"""
