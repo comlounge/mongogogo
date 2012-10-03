@@ -16,6 +16,10 @@ def test_defaults(db, persons):
     p = persons.data_class()
     assert p.lastname == "foobar"
 
+def test_callable_defaults(db, persons):
+    p = persons.data_class()
+    assert isinstance(p.creation,datetime.datetime)
+
 def test_schemaless(db, schemaless_persons):
     p = schemaless_persons.data_class(firstname="Foo", lastname="Bar", extra=1)
     schemaless_persons.save(p)

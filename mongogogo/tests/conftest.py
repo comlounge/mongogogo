@@ -41,6 +41,15 @@ class PersonSchema(Schema):
 
 class Person(Record):
     schema = PersonSchema()
+    default_values = {
+        'lastname' : 'foobar',
+        'creation' : datetime.datetime.utcnow,
+        'age'      : 24,
+        'incrementor'      : 1,
+        'd'      : {},
+        'e'      : {},
+        'bio'    : {'name' : 'foobar'},
+    }
 
 class Persons(Collection):
     data_class = Person

@@ -65,7 +65,7 @@ class SchemaNode(object):
         self.name = name
 
 
-    def serialize(self, value = null, data = null, validate = True, **kw):
+    def serialize(self, value = null, data = null, **kw):
         """serialize data to a data structure for MongoDB. If this is a combined node then 
         serialization on all sub nodes is called as well with it's respective value (or null in case
         it does not exist in the source data.
@@ -83,8 +83,6 @@ class SchemaNode(object):
             password test in a filter. Note that the this record is always the source record and not
             the serialized version as this can not be complete.  
         :param kw: Additional keywords which will be passed to the actual serialization code and filters
-        :param validate: If False then no validation code will be run which is useful for initializing an object
-            with just the default values
         :return: The serialized version of the data.
         
         """
@@ -104,11 +102,11 @@ class SchemaNode(object):
                 value = self.default
 
         # check required
-        if value is null and self.required and validate:
+        if value is null and self.required:
             raise Invalid(self, "required data missing")
 
         # now run the actual serialization
-        return self.do_serialize(value, data, validate = validate,**kw)
+        return self.do_serialize(value, data, **kw)
 
     def deserialize(self, value = null, data = null, **kw):
         """deserialize MongoDB data to a python usable data structure. If this is a combined node then 
@@ -186,10 +184,10 @@ class String(SchemaNode):
         super(String, self).__init__(*args, **kw)
         self.encoding = encoding
 
-    def do_serialize(self, value, data, validate = True, **kw):
+    def do_serialize(self, value, data, **kw):
         """serialize data"""
         if value is null:
-            if self.required and validate:
+            if self.required:
                 raise Invalid(self, "required data missing")
             else:
                 return null
@@ -290,11 +288,11 @@ class List(SchemaNode):
         super(List, self).__init__(*args, **kw)
         self.subtype = subtype
 
-    def do_serialize(self, value, data, validate = True, **kw):
+    def do_serialize(self, value, data, **kw):
         """serialize the list"""
         if value is null and not self.required:
             value = []
-        elif value is null and self.required and validate:
+        elif value is null and self.required:
             raise Invalid(self, "required data missing")
         result = []
         for item in value:

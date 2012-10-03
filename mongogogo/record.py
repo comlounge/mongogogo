@@ -35,9 +35,10 @@ class ObjectNotFound(DatabaseError):
 
 class Record(dict):
     
-    _schema = None
-    _protected = ['_collection', '_protected', '_from_db', '_schemaless']
+    schema = None
+    _protected = ['schema', 'collection', '_protected', '_schemaless', 'default_values']
     schemaless = False # set to true to allow arbitrary data. If set to False, then additional data will be filtered out
+    default_values = {} # default values for a newly created record. Will only be used if from_db is None 
 
     def __init__(self, doc={}, from_db = None, collection = None, *args, **kwargs):
         """initialize a record with data
@@ -51,11 +52,6 @@ class Record(dict):
         :param collection: the collection instance this data object belongs to
         """
 
-        # schemaless means that we also store values from the doc which are not present in the schema
-        # otherwise we will just ignore them. Defaults and kwargs are not bound to it though.
-        doc = copy.copy(doc) # copy so that we don't change it in place
-        doc.update(kwargs)
-
         self._id = None
         if self.schemaless:
             super(Record, self).__init__(from_db if from_db is not None else doc, *args, **kwargs)
@@ -67,14 +63,31 @@ class Record(dict):
             self.update(self.schema.deserialize(from_db))
             self._id = from_db.get("_id", None)
         else:
-            self.update(self.schema.serialize({}, validate=False)) # set defaults
+            self._initialize_defaults()
             self.update(doc)
+            self.update(kwargs)
 
         self._collection = collection
 
         if from_db is None:
             # lets initialize it
             self.after_initialize()
+
+    def _initialize_defaults(self):
+        """initialize the record with the default values"""
+        def ini(value):
+            if callable(value):
+                value = value()
+            if type(value) == types.DictType:
+                for a,v in value.items():
+                    value[a] = ini(v)
+            if type(value) == types.ListType:
+                n = []
+                for v in value:
+                    n.append(ini(v))
+                value = n
+            return value
+        self.update(ini(self.default_values))
 
     def __getattr__(self, k):
         """retrieve some data from the dict"""
