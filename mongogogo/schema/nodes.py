@@ -190,7 +190,8 @@ class String(SchemaNode):
             if self.required:
                 raise Invalid(self, "required data missing")
             else:
-                return null
+                # return something mongo compatible so not the null object
+                return None
         try:
             if isinstance(value, unicode):
                 if self.encoding:
@@ -216,11 +217,15 @@ class Date(SchemaNode):
 
     def do_serialize(self, value, data, **kw):
         if isinstance(value, datetime.datetime):
-            return value.date()
+            value = value.date()
         elif not isinstance(value, datetime.date):
             raise Invalid(self, "Value '%s' is not an instance of datetime.datetime.Date" %(value))
-        return value
+        # we need to return a datetime object as mongo does not understand something else
+        return datetime.datetime.combine(value, datetime.time())
 
+    def do_deserialize(self, value, data, **kw):
+        """convert datetime back to date"""
+        return value.date()
 
 class Dict(SchemaNode):
     """a dict type. """
@@ -254,6 +259,8 @@ class Integer(SchemaNode):
 
     def do_serialize(self, value, data, **kw):
         """serialize data"""
+        if value is null and not self.required:
+            return None
         try:
             v = int(value)
         except Exception, e: 
@@ -269,6 +276,8 @@ class Float(Integer):
 
     def do_serialize(self, value, data, **kw):
         """serialize data"""
+        if value is null and not self.required:
+            return None
         try:
             v = float(value)
         except Exception, e: 

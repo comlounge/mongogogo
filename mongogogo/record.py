@@ -167,6 +167,7 @@ class Collection(object):
             data = obj.schema.serialize(obj)
         if _id is not None:
             data['_id'] = _id
+        print 3, data
         data = self.before_put(obj, data) # hook for handling additional validation etc.
         self.collection.save(data, True)
         obj._id = data['_id']
