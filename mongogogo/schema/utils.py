@@ -8,7 +8,8 @@ class Null(object):
     def __repr__(self):
         return self.label
 
-null = Null("<null>")
+null = None
+#null = Null("<null>")
 marker = Null("<marker>")
 
 

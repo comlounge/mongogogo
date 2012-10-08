@@ -135,6 +135,7 @@ class Collection(object):
 
     data_class = Record
     create_ids = False # if True then you can override gen_id to generate a new id, otherwise a UUID will be used. If False then we use mongo objectids 
+    convert_objectids = True # if True then get() will convert string _ids to object ids
 
     def __init__(self, collection, md = {}):
         """initialize the collection
@@ -167,7 +168,6 @@ class Collection(object):
             data = obj.schema.serialize(obj)
         if _id is not None:
             data['_id'] = _id
-        print 3, data
         data = self.before_put(obj, data) # hook for handling additional validation etc.
         self.collection.save(data, True)
         obj._id = data['_id']
