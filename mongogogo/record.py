@@ -3,6 +3,31 @@ import types
 import copy
 from cursor import Cursor
 
+class AttributeMapper(dict):
+    """a dictionary like object which also is accessible via getattr/setattr"""
+
+    __slots__ = []
+
+    def __init__(self, default={}, *args, **kwargs):
+        super(AttributeMapper, self).__init__(*args, **kwargs)
+        self.update(default)
+        self.update(kwargs)
+
+    def __getattr__(self, k):
+        """retrieve some data from the dict"""
+        if self.has_key(k):
+            return self[k]
+        raise AttributeError(k)
+
+    def __setattr__(self, k,v):
+        """store an attribute in the map"""
+        self[k] = v
+
+    def _clone(self):
+        """return a clone of this object"""
+        d = copy.deepcopy(self) 
+        return AttributeMapper(d)
+
 class DatabaseError(Exception):
     """master class for all mongogogo exceptions"""
 
@@ -137,14 +162,16 @@ class Collection(object):
     create_ids = False # if True then you can override gen_id to generate a new id, otherwise a UUID will be used. If False then we use mongo objectids 
     convert_objectids = True # if True then get() will convert string _ids to object ids
 
-    def __init__(self, collection, md = {}):
+    def __init__(self, collection, md = {}, **kwargs):
         """initialize the collection
 
         :param collection: The pymongo collection object to use
         :param md: Additional Metadata to be stored in this collection (link to some config etc. maybe useful for validation)
+        :param kwargs: Additional parameters which will be stored inside the metadata dict
         """
         self.collection = collection
-        self.md = md
+        self.md = AttributeMapper(md)
+        self.md.update(kwargs)
 
     def new_id(self):
         """create a new unique id"""
