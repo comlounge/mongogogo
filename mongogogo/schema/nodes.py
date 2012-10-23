@@ -186,7 +186,7 @@ class String(SchemaNode):
 
     def do_serialize(self, value, data, **kw):
         """serialize data"""
-        if value is null:
+        if value is None:
             if self.required:
                 raise Invalid(self, "required data missing")
             else:

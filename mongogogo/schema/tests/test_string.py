@@ -32,3 +32,7 @@ def test_basic_string_serialize_default_and_missing(schema1):
     assert v == "foobar"
 
 
+def test_basic_string_set_to_none(schema1):
+    s = String()
+    v = s.serialize(None)
+    assert v is None

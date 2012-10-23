@@ -28,6 +28,18 @@ class AttributeMapper(dict):
         d = copy.deepcopy(self) 
         return AttributeMapper(d)
 
+    def update(self, d):
+        """update the dictionary but make sure that existing included AttributeMappers are only updated aswell"""
+        for a,v in d.items():
+            if a not in self:
+                self[a] = v
+            elif isinstance(self[a], AttributeMapper) and type(v) == types.DictType:
+                self[a].update(v)
+            elif type(self[a]) == types.DictType and type(v) == types.DictType:
+                self[a].update(v)
+            else:
+                self[a] = v
+
 class DatabaseError(Exception):
     """master class for all mongogogo exceptions"""
 
