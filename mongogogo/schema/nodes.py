@@ -7,6 +7,7 @@ __all__ = [
     "String",
     "Integer",
     "Float",
+    "Boolean",
     "Date",
     "DateTime",
     "Dict",
@@ -287,6 +288,19 @@ class Float(Integer):
             raise Invalid(self, "Value '%s' is too low, minimum value is %s" %(value, self.min))
         if self.max is not None and v > self.max:
             raise Invalid(self, "Value '%s' is too big, maximum value is %s" %(value, self.max))
+        return v
+
+class Boolean(SchemaNode):
+    """an integer type. """
+
+    def do_serialize(self, value, data, **kw):
+        """serialize data"""
+        if value is null and not self.required:
+            return False
+        try:
+            v = bool(value)
+        except Exception, e: 
+            raise Invalid(self, "Value '%s' cannot be serialized: %s" %(value, e))
         return v
 
 class List(SchemaNode):
