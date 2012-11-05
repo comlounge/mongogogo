@@ -219,6 +219,10 @@ class Date(SchemaNode):
     def do_serialize(self, value, data, **kw):
         if isinstance(value, datetime.datetime):
             value = value.date()
+        elif value is None and not self.required:
+            return None
+        elif value is None and self.required:
+            raise Invalid(self, "required data missing")
         elif not isinstance(value, datetime.date):
             raise Invalid(self, "Value '%s' is not an instance of datetime.datetime.Date" %(value))
         # we need to return a datetime object as mongo does not understand something else
