@@ -226,6 +226,8 @@ class Date(SchemaNode):
 
     def do_deserialize(self, value, data, **kw):
         """convert datetime back to date"""
+        if value is None:
+            return value
         return value.date()
 
 class Dict(SchemaNode):
