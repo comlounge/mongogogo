@@ -210,9 +210,6 @@ class String(SchemaNode):
             raise Invalid(self, "Value '%s' cannot be serialized: %s" %(value, e))
 
 
-class DateTime(SchemaNode):
-    """a datetime type. """
-
 class Date(SchemaNode):
     """a date type which converts DateTime objects to Date objects"""
 
@@ -233,6 +230,21 @@ class Date(SchemaNode):
         if value is None:
             return value
         return value.date()
+
+class DateTime(SchemaNode):
+    """a datetime type. """
+
+    def do_serialize(self, value, data, **kw):
+        if isinstance(value, datetime.date):
+            value = datetime.datetime.combine(value, datetime.time())
+        elif value is None and not self.required:
+            return None
+        elif value is None and self.required:
+            raise Invalid(self, "required data missing")
+        elif not isinstance(value, datetime.date):
+            raise Invalid(self, "Value '%s' is not an instance of datetime.datetime" %(value))
+        return value
+
 
 class Dict(SchemaNode):
     """a dict type. """
