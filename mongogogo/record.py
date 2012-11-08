@@ -109,6 +109,9 @@ class Record(dict):
         if from_db is None:
             # lets initialize it
             self.after_initialize()
+            self.after_create()
+        else:
+            self.after_load()
 
     def _initialize_defaults(self):
         """initialize the record with the default values"""
@@ -158,6 +161,14 @@ class Record(dict):
         that it has no unique id"""
         pass
 
+    def after_create(self):
+        """hook, which is called after an object has been created and defaults have been initialized"""
+        pass
+
+    def after_load(self):
+        """hook, which is called after an object has been loaded from the database"""
+        pass
+
     def save(self):
         """save this record"""
         if self._collection is None:
@@ -200,6 +211,7 @@ class Collection(object):
             _id = obj._id
 
         # now serialize and validate the object
+        obj = self.before_serialize(obj)
         if obj.schemaless:
             data = obj
             data.update(obj.schema.serialize(obj))
@@ -215,6 +227,10 @@ class Collection(object):
         return obj
 
     save = put
+
+    def before_serialize(self, obj):
+        """hook for changing the object before it's serialized"""
+        return obj
 
     def before_put(self, obj, data):
         """hook for handling additional validation etc."""
