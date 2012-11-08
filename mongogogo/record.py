@@ -161,7 +161,7 @@ class Record(dict):
     def save(self):
         """save this record"""
         if self._collection is None:
-            raise ConnectionMissing()
+            raise CollectionMissing()
         self._collection.save(self)
 
     put = save
@@ -234,7 +234,7 @@ class Collection(object):
         #else:
             #data = self.data_class.schema.deserialize(data)
         data['_id'] = _id
-        return self.data_class(from_db = data, _collection=self)
+        return self.data_class(from_db = data, collection=self)
 
     def remove(self, *args, **kwargs):
         return self.collection.remove(*args, **kwargs)
