@@ -129,7 +129,7 @@ class Record(dict):
     def __getattr__(self, k):
         """retrieve some data from the dict"""
         if k in self._protected:
-            return dict.__getattr__(self, k)
+            return dict.__getattribute__(self, k)
         if self.has_key(k):
             return self[k]
         raise AttributeError(k)
