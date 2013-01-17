@@ -181,7 +181,8 @@ class Record(dict):
         """remove this record"""
         if self._collection is None:
             raise CollectionMissing()
-        self._collection.remove(self)
+        q = {'_id' : self._id}
+        self._collection.remove(q)
             
 
 class Collection(object):
