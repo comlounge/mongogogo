@@ -176,6 +176,12 @@ class Record(dict):
         self._collection.save(self)
 
     put = save
+
+    def remove(self):
+        """remove this record"""
+        if self._collection is None:
+            raise CollectionMissing()
+        self._collection.remove(self)
             
 
 class Collection(object):
