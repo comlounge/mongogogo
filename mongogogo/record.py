@@ -181,8 +181,7 @@ class Record(dict):
         """remove this record"""
         if self._collection is None:
             raise CollectionMissing()
-        q = {'_id' : self._id}
-        self._collection.remove(q)
+        self._collection.remove(self)
             
 
 class Collection(object):
@@ -259,7 +258,13 @@ class Collection(object):
         data['_id'] = _id
         return self.data_class(from_db = data, collection=self)
 
-    def remove(self, *args, **kwargs):
+    def remove(self, obj):
+        """high level method to remove an object"""
+        q = {'_id' : obj._id}
+        return self._remove(q)
+
+    def _remove(self, *args, **kwargs):
+        """raw remove method for using a query to remove one or more objects"""
         return self.collection.remove(*args, **kwargs)
 
     def find(self, *args, **kwargs):
