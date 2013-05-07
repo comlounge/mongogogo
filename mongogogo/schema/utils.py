@@ -1,3 +1,5 @@
+import types
+
 class Null(object):
     """a null object. We use a separate class here so that we can control the representation"""
 
