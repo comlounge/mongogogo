@@ -182,7 +182,10 @@ class Record(dict):
         if self._collection is None:
             raise CollectionMissing()
         self._collection.remove(self)
-            
+
+    def __repr__(self):
+        """representation of the object"""
+        return u"<%s:%s>" %(self.__class__.__name__, self._id)
 
 class Collection(object):
     """collection class for handling objects"""
@@ -278,6 +281,16 @@ class Collection(object):
         for result in self.find(spec_or_id, *args, **kwargs).limit(-1):
             return result
         return None
+
+    def __call__(self, data, **kw):
+        """create a new object and return it. It is not saved yet.
+
+        :param data: Data with which the new object should be initialized
+        :param kw: Additional keyword argument will overwrite the initial data
+        """
+        data.update(kw)
+        obj = self.data_class(data, collection = self)
+        return obj
 
     __getitem__ = get
         
