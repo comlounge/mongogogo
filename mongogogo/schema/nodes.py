@@ -27,6 +27,7 @@ class SchemaNode(object):
 
     _schemanode = True # marker for meta class that this is part of the schema
     _counter = 0 # this is a global counter which is incremented on instantiation of a type.
+    _cls = None # in case we want to deserialize to a class this should point to it
 
     def __new__(cls, *args, **kwargs):
         # increment the counter so we know which the original sequence of type nodes is. 
@@ -154,6 +155,15 @@ class SchemaNode(object):
         """
         return value
 
+    def set_class(self, cls):
+        """set the class to deserialize to. This is a method in order to allow a user to do late binding
+        as usually you would first define the schema, then the class and thus you cannot refer to the
+        class at the point you define the schema. Now just call set_class afterwards.
+
+        :param cls: The class object this schema node should deserialize to instead of a dict
+        """
+        self._cls = cls
+
 
 class Schema(SchemaNode):
 
@@ -162,7 +172,7 @@ class Schema(SchemaNode):
 
         output = {} # of course we have a mapping as output
         for name, field in self._nodes:
-            # TODO: here exceptions!
+            # TODO: here exceptions with a detailed description of which field actually failed and why!
             sub_value = value.get(name, null)
             output[name] = field.serialize(sub_value, data = data, **kw)
         return output
@@ -175,6 +185,8 @@ class Schema(SchemaNode):
             # TODO: here exceptions!
             sub_value = value.get(name, null)
             output[name] = field.deserialize(sub_value, data = data, **kw)
+        if self._cls is not None:
+            return self._cls(output)
         return output
 
 class String(SchemaNode):
@@ -339,4 +351,4 @@ class List(SchemaNode):
         for item in value:
             result.append(self.subtype.serialize(item, data, **kw))
         return result
-    
+
