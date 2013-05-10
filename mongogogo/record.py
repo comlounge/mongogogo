@@ -113,6 +113,9 @@ class Record(dict):
         else:
             self.after_load()
 
+        # set the schema class to this class
+        self.schema._mg_class = self.__class__
+
     def _initialize_defaults(self):
         """initialize the record with the default values"""
         def ini(value):

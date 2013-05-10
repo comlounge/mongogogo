@@ -14,6 +14,15 @@ __all__ = [
     "List",
 ]
 
+def get_class( kls ):
+    parts = kls.split('.')
+    module = ".".join(parts[:-1])
+    m = __import__( module )
+    for comp in parts[1:]:
+        m = getattr(m, comp)            
+    return m
+
+
 ###
 ### nodes
 ###
@@ -26,19 +35,22 @@ class SchemaNode(object):
     """
 
     _schemanode = True # marker for meta class that this is part of the schema
-    _counter = 0 # this is a global counter which is incremented on instantiation of a type.
-    _cls = None # in case we want to deserialize to a class this should point to it
+    #_counter = 0 # this is a global counter which is incremented on instantiation of a type.
 
     def __new__(cls, *args, **kwargs):
         # increment the counter so we know which the original sequence of type nodes is. 
-        SchemaNode._counter += 1
+        #SchemaNode._counter += 1
+        kls = kwargs.get("kls")
+        if "kls" in kwargs:
+            del kwargs['kls']
         instance = super(SchemaNode, cls).__new__(cls, *args, **kwargs)
-        instance._counter = SchemaNode._counter
+        #instance._counter = SchemaNode._counter
 
         # now collect the nodes in this instance
+        instance._mg_class = kls
         instance._nodes = []
         for name in dir(instance):
-            if not name.startswith('_'):
+            if not name.startswith('__') and not name.startswith('_mg_'):
                 field = getattr(instance, name)
 
                 # filter out only the type elements. We have marker in the base class for that
@@ -47,7 +59,7 @@ class SchemaNode(object):
                     instance._nodes.append((name, field))
         return instance
 
-    def __init__(self, on_serialize = [], on_deserialize = [], default = marker, required = False, name = None): 
+    def __init__(self, on_serialize = [], on_deserialize = [], default = marker, required = False, name = None, **kw): 
         """initialize the ``SchemaNode`` with generic parameters like queues, default and required flag
 
         :param on_serialize: a list of filters to be run before the actual serialization
@@ -141,7 +153,10 @@ class SchemaNode(object):
             raise Invalid(self, "required data missing")
 
         # now run the actual deserialization
-        return self.do_deserialize(value, data, **kw)
+        data = self.do_deserialize(value, data, **kw)
+        if self._mg_class is not None:
+            return self._mg_class(data)
+        return data
 
     def do_serialize(self, value, data, **kw):
         """the actual serialization code which you have to override in your own node implementations.
@@ -154,15 +169,6 @@ class SchemaNode(object):
         The implementation has to return the single deserialized value.
         """
         return value
-
-    def set_class(self, cls):
-        """set the class to deserialize to. This is a method in order to allow a user to do late binding
-        as usually you would first define the schema, then the class and thus you cannot refer to the
-        class at the point you define the schema. Now just call set_class afterwards.
-
-        :param cls: The class object this schema node should deserialize to instead of a dict
-        """
-        self._cls = cls
 
 
 class Schema(SchemaNode):
@@ -185,8 +191,9 @@ class Schema(SchemaNode):
             # TODO: here exceptions!
             sub_value = value.get(name, null)
             output[name] = field.deserialize(sub_value, data = data, **kw)
-        if self._cls is not None:
-            return self._cls(output)
+        print self, self._mg_class
+        if self._mg_class is not None:
+            return self._mg_class(output)
         return output
 
 class String(SchemaNode):

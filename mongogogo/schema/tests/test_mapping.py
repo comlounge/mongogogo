@@ -87,3 +87,10 @@ def test_basic_serialize_with_subclass(subschema1):
     assert res['required'] == "Required"
     assert res['with_default'] == "no default"
     assert res['name2'] == "hansi"
+
+
+def test_underscore_mapping(underscoreschema):
+    
+    data = {'_name' : 'foobar'}
+    res = underscoreschema.serialize(data)
+    assert res['_name'] == "foobar"

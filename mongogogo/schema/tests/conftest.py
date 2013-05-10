@@ -21,6 +21,10 @@ class TestSchema2(Schema):
     name = String()
     bio1 = Bio(on_serialize=[Default({'name': 'foobar'})])
     bio2 = Bio(required = True)
+    
+class UnderscoreTestSchema(Schema):
+    """very simply schema with a sub schema"""
+    _name = String()
 
 class TestSchema12(Schema):
     name = String()
@@ -40,5 +44,7 @@ def pytest_funcarg__schema2(request):
 def pytest_funcarg__subschema1(request):
     return SubSchema()
 
+def pytest_funcarg__underscoreschema(request):
+    return UnderscoreTestSchema()
 
 
