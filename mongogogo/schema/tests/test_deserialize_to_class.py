@@ -8,9 +8,7 @@ class MyDict(dict):
     CUSTOM = True
 
 def test_deserialize_to_class_simple():
-    print 1
     schema1 = TestSchema1(kls=MyDict)
-    print "ok"
     data = {'not_required' : 'n/a',
          'required' : 'Required',
          'with_default' : 'no default'}

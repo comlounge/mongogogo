@@ -191,7 +191,6 @@ class Schema(SchemaNode):
             # TODO: here exceptions!
             sub_value = value.get(name, null)
             output[name] = field.deserialize(sub_value, data = data, **kw)
-        print self, self._mg_class
         if self._mg_class is not None:
             return self._mg_class(output)
         return output
@@ -359,3 +358,21 @@ class List(SchemaNode):
             result.append(self.subtype.serialize(item, data, **kw))
         return result
 
+    def do_deserialize(self, value, data, **kw):
+        """deserialize a list object. This includes checking the destination schema and deserializing this
+        as well while taking the destination class into account.
+
+        :param value: The individual value for this node to deserialize
+        :param data: The whole record e.g. in case you need access to a different field for e.g. a 
+            password test in a filter. Note that the this record is always the source record and not
+            the deserialized version as this can not be complete.  
+        :param kw: Additional keywords which will be passed to the actual deserialization code and filters
+        :return: The deserialized version of the data.
+        
+        """
+
+        result = []
+        for item in value:
+            item = self.subtype.deserialize(item, data, **kw)
+            result.append(item)
+        return result
