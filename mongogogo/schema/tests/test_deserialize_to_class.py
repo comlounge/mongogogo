@@ -47,28 +47,3 @@ def test_deserialize_to_class_list(schema1):
     assert res['names'][0].__class__.__name__ == "Name"
 
 
-def test_deserialize_to_class_deferred():
-    """set the class to serialize to after initialization of the schema"""
-
-    class NameSchema(Schema):
-        name = String()
-
-    class Name(Schema):
-        """content class for name schema"""
-
-    class NamesSchema(Schema):
-        """schema containing a list of names"""
-        names = List(NameSchema(kls=Name)) 
-
-    class Names(dict):
-        """Content class for NamesSchema""" 
-        myname = "NamesSchema"
-
-    names = NamesSchema()
-    names._mg_class = Names
-    data = {'names' : [{'name' : 'one'}, {'name' : 'two'}, {'name' : 'three'}]}
-    res = names.serialize(data)
-    res = names.deserialize(res)
-    assert res.__class__.__name__ == "Names"
-
-
