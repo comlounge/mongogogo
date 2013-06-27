@@ -1,8 +1,14 @@
 import pytest
 import datetime
+from conftest import Person
 
 def test_add(db, persons):
     p = persons.data_class(firstname="Foo", lastname="Bar")
+    persons.save(p)
+    assert p._id is not None
+
+def test_add_via_class(db, persons):
+    p = Person(firstname="Foo", lastname="Bar")
     persons.save(p)
     assert p._id is not None
 
