@@ -13,6 +13,7 @@ def setup_db():
 def teardown_db(db):
     #pymongo.Connection().drop_database(DB_NAME)
     db.persons.remove()
+    db.barcamps.remove()
 
 def pytest_funcarg__db(request):
     return request.cached_setup(

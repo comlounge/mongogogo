@@ -122,6 +122,7 @@ class Record(dict):
             if callable(value):
                 value = value()
             if type(value) == types.DictType:
+                value = copy.copy(value)
                 for a,v in value.items():
                     value[a] = ini(v)
             if type(value) == types.ListType:
