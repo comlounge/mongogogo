@@ -267,7 +267,7 @@ class DateTime(SchemaNode):
 class Dict(SchemaNode):
     """a dict type. """
 
-    def __init__(self, dotted = False, *args, **kw):
+    def __init__(self, subtype = None, dotted = False, *args, **kw):
         """initialize the Dict Type.
 
         :param dotted: if set to ``True`` then this dictionary will also allow dotted access using AttributeMapper
@@ -275,6 +275,21 @@ class Dict(SchemaNode):
         """
         super(Dict, self).__init__(*args, **kw)
         self.dotted = dotted
+        self.subtype = subtype
+
+    def do_serialize(self, value, data, **kw):
+        """serialize the dict"""
+        if value is null and not self.required:
+            value = {}
+        elif value is null and self.required:
+            raise Invalid(self, "required data missing")
+        result = {}
+        if self.subtype != None:
+            for key, data in value.items():
+                result[key] = self.subtype.serialize(data, data, **kw)
+            return result
+        else:
+            return value
 
     def do_deserialize(self, value, data, **kw):
         """deserialize either into a normal dictionary or into an AttributeMapper allowing dotted notation
