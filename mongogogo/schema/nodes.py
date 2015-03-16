@@ -253,7 +253,8 @@ class DateTime(SchemaNode):
     """a datetime type. """
 
     def do_serialize(self, value, data, **kw):
-        if isinstance(value, datetime.date):
+        # datetime.datetime also returns True for testing datetime.date
+        if isinstance(value, datetime.date) and not isinstance(value, datetime.datetime):
             value = datetime.datetime.combine(value, datetime.time())
         elif value is None and not self.required:
             return None
