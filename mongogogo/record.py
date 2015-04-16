@@ -187,10 +187,6 @@ class Record(dict):
             raise CollectionMissing()
         self._collection.remove(self)
 
-    def __repr__(self):
-        """representation of the object"""
-        return u"<%s:%s>" %(self.__class__.__name__, self._id)
-
 class Collection(object):
     """collection class for handling objects"""
 
