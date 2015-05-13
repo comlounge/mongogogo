@@ -209,6 +209,10 @@ class Collection(object):
         """create a new unique id"""
         return unicode(uuid.uuid4())
 
+    def create(self):
+        """create a new instance of the data class and store the collection inside"""
+        return self.data_class(collection = self)
+
     def put(self, obj):
         """store an object"""
 
