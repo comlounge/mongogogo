@@ -39,24 +39,25 @@ class Cursor(PymongoCursor):
         super(Cursor, self).__init__(collection.collection, *args, **kwargs)
 
     def next(self):
-        if self._Cursor__empty:
+        """Advance the cursor."""
+        if self.__empty:
             raise StopIteration
-        db = self._Cursor__collection.database
+        _db = self.__collection.database
         if len(self.__data) or self._refresh():
-            if isinstance(self._Cursor__data, deque):
-                item = self._Cursor__data.popleft()
+            if self.__manipulate:
+                son = _db._fix_outgoing(self.__data.popleft(),
+                                         self.__collection)
             else:
-                item = self._Cursor__data.pop(0)
-            if self._Cursor__manipulate:
-                son = db._fix_outgoing(item, self._Cursor__collection)
-            else:
-                son = item
+                son = self.__data.popleft()
+            
+            # our own addition
             if self.__wrap is not None:
                 return self.__wrap(from_db = son, collection=self.__mongogogo_collection)
             else:
                 return son
         else:
             raise StopIteration
+
 
     def __getitem__(self, index):
         obj = super(Cursor, self).__getitem__(index)
