@@ -178,6 +178,8 @@ class Schema(SchemaNode):
 
         output = {} # of course we have a mapping as output
         for name, field in self._nodes:
+            if value is None:
+                raise ValueError, "node %s is missing from data and no default was given" %self.name
             # TODO: here exceptions with a detailed description of which field actually failed and why!
             sub_value = value.get(name, null)
             output[name] = field.serialize(sub_value, data = data, **kw)
