@@ -18,6 +18,7 @@ setup(name='mongogogo',
       include_package_data=True,
       zip_safe=False,
       install_requires=[
+        "python-dateutil",
         "pymongo>3",
       ],
       entry_points="""

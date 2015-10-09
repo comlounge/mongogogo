@@ -1,5 +1,7 @@
 from utils import null, Invalid, marker, AttributeMapper
 import datetime
+import types
+import dateutil.parser
 
 __all__ = [
     "SchemaNode",
@@ -259,6 +261,10 @@ class DateTime(SchemaNode):
 
     def do_serialize(self, value, data, **kw):
         # datetime.datetime also returns True for testing datetime.date
+
+        # if datetime is a string try to convert it to a datetime object
+        if isinstance(value, types.UnicodeType) or isinstance(value, types.StringType):
+            value = dateutil.parser.parse(value)
         if isinstance(value, datetime.date) and not isinstance(value, datetime.datetime):
             value = datetime.datetime.combine(value, datetime.time())
         elif value is None and not self.required:
