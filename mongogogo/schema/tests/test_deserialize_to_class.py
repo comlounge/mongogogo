@@ -47,3 +47,40 @@ def test_deserialize_to_class_list(schema1):
     assert res['names'][0].__class__.__name__ == "Name"
 
 
+
+
+def test_fillin_defaults_in_subsubschema():
+
+    class RecordSchema(Schema):
+        test = String()
+        empty = String(default = "")
+        b = Boolean(default = False)
+        foo = String(default = "bar")
+
+    class SubDictSchema(Schema):
+        test_list = List(RecordSchema())
+
+    class TestSchema(Schema):
+
+        sub1 = SubDictSchema(default = {
+                'test_list' : []
+            })
+
+    schema = TestSchema()
+    payload = {
+        'sub1' : {
+            'test_list' : 
+                [
+                    {'test' : 'testing'}
+                ]
+        } # sub1
+    } # payload
+
+    data = schema.serialize(payload)
+
+    assert data['sub1']['test_list'][0]['test'] == 'testing'
+    assert data['sub1']['test_list'][0]['foo'] == 'bar'
+    assert data['sub1']['test_list'][0]['b'] == False
+    assert data['sub1']['test_list'][0]['empty'] == ""
+
+
