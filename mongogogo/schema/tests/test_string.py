@@ -36,3 +36,9 @@ def test_basic_string_set_to_none(schema1):
     s = String()
     v = s.serialize(None)
     assert v is None
+
+def test_string_too_long(schema1):
+    s = String(max_length=10)
+    s.serialize("0123456789")
+    pytest.raises(Invalid, s.serialize, '01234567890')
+    

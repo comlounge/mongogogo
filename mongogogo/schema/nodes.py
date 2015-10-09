@@ -200,10 +200,11 @@ class Schema(SchemaNode):
 class String(SchemaNode):
     """a string type. """
 
-    def __init__(self, encoding = None, *args, **kw):
+    def __init__(self, encoding = None, max_length = None, *args, **kw):
         """initialize the String Type"""
         super(String, self).__init__(*args, **kw)
         self.encoding = encoding
+        self.max_length = max_length
 
     def do_serialize(self, value, data, **kw):
         """serialize data"""
@@ -213,6 +214,8 @@ class String(SchemaNode):
             else:
                 # return something mongo compatible so not the null object
                 return None
+        if self.max_length is not None and len(value) > self.max_length:
+            raise Invalid(self, "string too long")
         try:
             if isinstance(value, unicode):
                 if self.encoding:
