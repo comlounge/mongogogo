@@ -259,12 +259,17 @@ class Date(SchemaNode):
 class DateTime(SchemaNode):
     """a datetime type. """
 
+    def __init__(self, ignore_tz = False, *args, **kw):
+        """initialize the datetime object"""
+        super(DateTime, self).__init__(*args, **kw)
+        self.ignore_tz = ignore_tz
+
     def do_serialize(self, value, data, **kw):
         # datetime.datetime also returns True for testing datetime.date
 
         # if datetime is a string try to convert it to a datetime object
         if isinstance(value, types.UnicodeType) or isinstance(value, types.StringType):
-            value = dateutil.parser.parse(value)
+            value = dateutil.parser.parse(value, ignoretz = self.ignore_tz)
         if isinstance(value, datetime.date) and not isinstance(value, datetime.datetime):
             value = datetime.datetime.combine(value, datetime.time())
         elif value is None and not self.required:
