@@ -2,11 +2,13 @@ from utils import null, Invalid, marker, AttributeMapper
 import datetime
 import types
 import dateutil.parser
+import re
 
 __all__ = [
     "SchemaNode",
     "Schema",
     "String",
+    "Regexp",
     "Integer",
     "Float",
     "Boolean",
@@ -233,6 +235,29 @@ class String(SchemaNode):
             return result
         except Exception, e:
             raise Invalid(self, "Value '%s' cannot be serialized: %s" %(value, e))
+
+class Regexp(String):
+    """a string which has to conform to a regular expression"""
+
+    def __init__(self, regexp, *args, **kw):
+        """initialize the regexp node
+
+        :param regexp: needs to be a re.compile instance or a pattern string 
+        """
+        super(Regexp, self).__init__(*args, **kw)
+        if type(regexp) in [types.StringType, types.UnicodeType]:
+            self.regexp = re.compile(regexp)
+        else:
+            self.regexp = regexp
+
+    def do_serialize(self, value, data, **kw):
+        """check the regexp"""
+
+        # first the normal string checks
+        value = super(Regexp, self).do_serialize(value, data, **kw)
+        if self.regexp.match(value) is None:
+            raise Invalid(self, "Value '%s' does not match regular expression" %(value))
+        return value
 
 
 class Date(SchemaNode):
