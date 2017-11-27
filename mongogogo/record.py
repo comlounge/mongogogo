@@ -286,7 +286,7 @@ class Collection(object):
             return result
         return None
 
-    def __call__(self, data, **kw):
+    def __call__(self, data = {}, **kw):
         """create a new object and return it. It is not saved yet.
 
         :param data: Data with which the new object should be initialized
